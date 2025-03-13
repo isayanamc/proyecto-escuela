@@ -1,53 +1,44 @@
 package com.escuela.services;
+
+import com.escuela.dao.GrupoCursoDAO;
+import com.escuela.models.GrupoCurso;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
-import com.escuela.database.DatabaseConnection;
 
 public class GrupoCursoService {
+    private final GrupoCursoDAO grupoCursoDAO = new GrupoCursoDAO();
 
     public void asignarCursoAGrupo(BufferedReader in, PrintStream out) throws IOException {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            out.println("\n🔗 Asignar curso a grupo:");
-    
+        try {
+            out.println("\n📌 Asignar Curso a Grupo");
             out.print("Ingrese el ID del grupo: ");
             int grupoId = Integer.parseInt(in.readLine());
-    
+
             out.print("Ingrese el ID del curso: ");
             int cursoId = Integer.parseInt(in.readLine());
-    
-            CallableStatement stmt = conn.prepareCall("{CALL InsertarGrupoCurso(?, ?)}");
-            stmt.setInt(1, grupoId);
-            stmt.setInt(2, cursoId);
-    
-            stmt.execute();
+
+            grupoCursoDAO.asignarCursoAGrupo(grupoId, cursoId);
             out.println("✅ Curso asignado al grupo correctamente.");
         } catch (SQLException e) {
-            out.println("❌ Error al asignar curso al grupo: " + e.getMessage());
+            out.println("❌ Error al asignar el curso al grupo: " + e.getMessage());
         }
     }
 
-    public void listarGrupoCurso(PrintStream out) {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            CallableStatement stmt = conn.prepareCall("{CALL ListarGrupoCurso()}");
-            ResultSet rs = stmt.executeQuery();
-    
-            out.println("\n📋 Lista de grupos y cursos asignados:");
-            while (rs.next()) {
-                out.printf("Grupo ID: %d | Curso ID: %d%n",
-                    rs.getInt("grupo_id"),
-                    rs.getInt("curso_id")
-                );
+    public void listarGrupoCursos(PrintStream out) {
+        try {
+            List<GrupoCurso> grupoCursos = grupoCursoDAO.listarGrupoCursos();
+            out.println("\n📋 Lista de relaciones Grupo-Curso:");
+            for (GrupoCurso grupoCurso : grupoCursos) {
+                out.println("ID: " + grupoCurso.getId() +
+                            ", Grupo ID: " + grupoCurso.getGrupoId() +
+                            ", Curso ID: " + grupoCurso.getCursoId());
             }
         } catch (SQLException e) {
-            out.println("❌ Error al listar grupo-curso: " + e.getMessage());
+            out.println("❌ Error al listar relaciones Grupo-Curso: " + e.getMessage());
         }
     }
-        
-    
 }

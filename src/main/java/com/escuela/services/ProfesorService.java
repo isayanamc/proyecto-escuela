@@ -1,22 +1,20 @@
 package com.escuela.services;
 
+import com.escuela.dao.ProfesorDAO;
+import com.escuela.models.Profesor;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
-import com.escuela.database.DatabaseConnection;
-import com.escuela.models.Profesor;
 
 public class ProfesorService {
+    private final ProfesorDAO profesorDAO = new ProfesorDAO();
 
     public void insertarProfesor(BufferedReader in, PrintStream out) throws IOException {
-        try (Connection conn = DatabaseConnection.getConnection()) {
+        try {
             out.println("\n📌 Ingrese los datos del profesor:");
-
             out.print("Nombre: ");
             String nombre = in.readLine();
 
@@ -29,36 +27,19 @@ public class ProfesorService {
             out.print("Departamento: ");
             String departamento = in.readLine();
 
-            CallableStatement stmt = conn.prepareCall("{CALL InsertarProfesor(?, ?, ?, ?)}");
-            stmt.setString(1, nombre);
-            stmt.setString(2, identificacion);
-            stmt.setString(3, email);
-            stmt.setString(4, departamento);
-
-            stmt.execute();
+            Profesor profesor = new Profesor(0, nombre, identificacion, email, departamento, true);
+            profesorDAO.insertarProfesor(profesor);
             out.println("✅ Profesor insertado correctamente.");
-
         } catch (SQLException e) {
             out.println("❌ Error al insertar el profesor: " + e.getMessage());
         }
     }
 
-
     public void listarProfesores(PrintStream out) {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            CallableStatement stmt = conn.prepareCall("{CALL ListarProfesores()}");
-            ResultSet rs = stmt.executeQuery();
-
+        try {
+            List<Profesor> profesores = profesorDAO.listarProfesores();
             out.println("\n📋 Lista de profesores:");
-            while (rs.next()) {
-                Profesor profesor = new Profesor(
-                    rs.getInt("id"),
-                    rs.getString("nombre"),
-                    rs.getString("identificacion"),
-                    rs.getString("email"),
-                    rs.getString("departamento"),
-                    rs.getBoolean("estado")
-                );
+            for (Profesor profesor : profesores) {
                 out.println(profesor);
             }
         } catch (SQLException e) {
@@ -66,11 +47,21 @@ public class ProfesorService {
         }
     }
 
+    public void eliminarProfesor(BufferedReader in, PrintStream out) throws IOException {
+        try {
+            out.print("\n❌ Ingrese el ID del profesor a eliminar: ");
+            int id = Integer.parseInt(in.readLine());
+
+            profesorDAO.eliminarProfesor(id);
+            out.println("✅ Profesor eliminado correctamente.");
+        } catch (SQLException e) {
+            out.println("❌ Error al eliminar el profesor: " + e.getMessage());
+        }
+    }
 
     public void modificarProfesor(BufferedReader in, PrintStream out) throws IOException {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            out.println("\n✏ Modificar profesor");
-    
+        try {
+            out.println("\n✏️ Modificar profesor");
             out.print("Ingrese el ID del profesor a modificar: ");
             int id = Integer.parseInt(in.readLine());
     
@@ -86,35 +77,20 @@ public class ProfesorService {
             out.print("Nuevo departamento (deje vacío para no cambiar): ");
             String departamento = in.readLine();
     
-            CallableStatement stmt = conn.prepareCall("{CALL ModificarProfesor(?, ?, ?, ?, ?)}");
-            stmt.setInt(1, id);
-            stmt.setString(2, nombre.isEmpty() ? null : nombre);
-            stmt.setString(3, identificacion.isEmpty() ? null : identificacion);
-            stmt.setString(4, email.isEmpty() ? null : email);
-            stmt.setString(5, departamento.isEmpty() ? null : departamento);
+            out.print("¿Está activo? (true/false): ");
+            boolean estado = Boolean.parseBoolean(in.readLine());
     
-            stmt.execute();
+            Profesor profesor = new Profesor(id,
+                    nombre.isEmpty() ? null : nombre,
+                    identificacion.isEmpty() ? null : identificacion,
+                    email.isEmpty() ? null : email,
+                    departamento.isEmpty() ? null : departamento,
+                    estado);
+    
+            profesorDAO.modificarProfesor(profesor);
             out.println("✅ Profesor modificado correctamente.");
         } catch (SQLException e) {
             out.println("❌ Error al modificar el profesor: " + e.getMessage());
-        }
-    }
-    
-
-    public void eliminarProfesor(BufferedReader in, PrintStream out) throws IOException {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            out.println("\n❌ Eliminar profesor");
-    
-            out.print("Ingrese el ID del profesor a eliminar: ");
-            int id = Integer.parseInt(in.readLine());
-    
-            CallableStatement stmt = conn.prepareCall("{CALL EliminarProfesor(?)}");
-            stmt.setInt(1, id);
-    
-            stmt.execute();
-            out.println("✅ Profesor eliminado correctamente.");
-        } catch (SQLException e) {
-            out.println("❌ Error al eliminar el profesor: " + e.getMessage());
         }
     }
     

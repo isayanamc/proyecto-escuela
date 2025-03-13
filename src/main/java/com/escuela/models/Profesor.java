@@ -16,7 +16,10 @@ public class Profesor {
         this.departamento = departamento;
         this.estado = estado;
     }
-    
+
+
+    public Profesor() {}
+
     // Getters y Setters
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -35,4 +38,15 @@ public class Profesor {
 
     public boolean isEstado() { return estado; }
     public void setEstado(boolean estado) { this.estado = estado; }
+
+    @Override
+    public String toString() {
+        return "Profesor{id=" + id +
+               ", nombre='" + nombre + '\'' +
+               ", identificacion='" + identificacion + '\'' +
+               ", email='" + email + '\'' +
+               ", departamento='" + departamento + '\'' +
+               ", estado=" + estado +
+               '}';
+    }
 }

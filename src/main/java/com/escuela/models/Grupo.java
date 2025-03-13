@@ -25,4 +25,15 @@ public class Grupo {
 
     public boolean isEstado() { return estado; }
     public void setEstado(boolean estado) { this.estado = estado; }
+
+    @Override
+    public String toString() {
+        return "Grupo{id=" + id + 
+               ", nombre='" + nombre + '\'' +
+               ", descripcion='" + descripcion + '\'' +
+               ", estado=" + estado + 
+               '}';
+    }
+    
+
 }

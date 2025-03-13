@@ -1,34 +1,30 @@
 package com.escuela.services;
 
+import com.escuela.dao.CursoDAO;
+import com.escuela.models.Curso;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
-import com.escuela.database.DatabaseConnection;
-import com.escuela.models.Curso;
-
-
+/**
+ * Servicio para manejar la lógica de negocio de Curso.
+ */
 public class CursoService {
+    private final CursoDAO cursoDAO = new CursoDAO();
 
     public void insertarCurso(BufferedReader in, PrintStream out) throws IOException {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            out.println("\n📚 Ingrese los datos del curso:");
-    
+        try {
+            out.println("\n📌 Ingrese los datos del curso:");
             out.print("Nombre: ");
             String nombre = in.readLine();
-    
+
             out.print("Descripción: ");
             String descripcion = in.readLine();
-    
-            CallableStatement stmt = conn.prepareCall("{CALL InsertarCurso(?, ?)}");
-            stmt.setString(1, nombre);
-            stmt.setString(2, descripcion);
-    
-            stmt.execute();
+
+            Curso curso = new Curso(0, nombre, descripcion, true);
+            cursoDAO.insertarCurso(curso);
             out.println("✅ Curso insertado correctamente.");
         } catch (SQLException e) {
             out.println("❌ Error al insertar el curso: " + e.getMessage());
@@ -36,18 +32,10 @@ public class CursoService {
     }
 
     public void listarCursos(PrintStream out) {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            CallableStatement stmt = conn.prepareCall("{CALL ListarCursos()}");
-            ResultSet rs = stmt.executeQuery();
-    
+        try {
+            List<Curso> cursos = cursoDAO.listarCursos();
             out.println("\n📋 Lista de cursos:");
-            while (rs.next()) {
-                Curso curso = new Curso(
-                    rs.getInt("id"),
-                    rs.getString("nombre"),
-                    rs.getString("descripcion"),
-                    rs.getBoolean("estado")
-                );
+            for (Curso curso : cursos) {
                 out.println(curso);
             }
         } catch (SQLException e) {
@@ -56,24 +44,19 @@ public class CursoService {
     }
 
     public void modificarCurso(BufferedReader in, PrintStream out) throws IOException {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            out.println("\n✏ Modificar curso");
-    
-            out.print("Ingrese el ID del curso a modificar: ");
+        try {
+            out.print("\n✏ Ingrese el ID del curso a modificar: ");
             int id = Integer.parseInt(in.readLine());
-    
+
             out.print("Nuevo nombre (deje vacío para no cambiar): ");
             String nombre = in.readLine();
-    
+
             out.print("Nueva descripción (deje vacío para no cambiar): ");
             String descripcion = in.readLine();
-    
-            CallableStatement stmt = conn.prepareCall("{CALL ModificarCurso(?, ?, ?)}");
-            stmt.setInt(1, id);
-            stmt.setString(2, nombre.isEmpty() ? null : nombre);
-            stmt.setString(3, descripcion.isEmpty() ? null : descripcion);
-    
-            stmt.execute();
+
+            Curso curso = new Curso(id, nombre.isEmpty() ? null : nombre, 
+                                        descripcion.isEmpty() ? null : descripcion, true);
+            cursoDAO.modificarCurso(curso);
             out.println("✅ Curso modificado correctamente.");
         } catch (SQLException e) {
             out.println("❌ Error al modificar el curso: " + e.getMessage());
@@ -81,21 +64,14 @@ public class CursoService {
     }
 
     public void eliminarCurso(BufferedReader in, PrintStream out) throws IOException {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            out.println("\n❌ Eliminar curso");
-    
-            out.print("Ingrese el ID del curso a eliminar: ");
+        try {
+            out.print("\n❌ Ingrese el ID del curso a eliminar: ");
             int id = Integer.parseInt(in.readLine());
-    
-            CallableStatement stmt = conn.prepareCall("{CALL EliminarCurso(?)}");
-            stmt.setInt(1, id);
-    
-            stmt.execute();
+
+            cursoDAO.eliminarCurso(id);
             out.println("✅ Curso eliminado correctamente.");
         } catch (SQLException e) {
             out.println("❌ Error al eliminar el curso: " + e.getMessage());
         }
     }
-    
-    
 }
